@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ECON 281 Study Lab</title>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("econ281:theme")==='"light"'?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
@@ -22,16 +23,20 @@
     <div class="rail-foot">
       Theme
       <div class="theme-toggle" role="group" aria-label="Color theme">
-        <button data-theme-set="system">Auto</button><button data-theme-set="light">Light</button><button data-theme-set="dark">Dark</button>
+        <button data-theme-set="dark">Dark</button><button data-theme-set="light">Light</button>
       </div>
     </div>
   </aside>
   <main id="main"></main>
 </div>
 <script src="assets/graph.js"></script>
+<script src="assets/ui.js"></script>
 <script src="assets/app.js"></script>
 <script src="data/course.js"></script>
 <script src="chapters/ch3/widgets.js"></script>
 <script src="chapters/ch3/content.js"></script>
+<script src="chapters/ch4/econ.js"></script>
+<script src="chapters/ch4/widgets.js"></script>
+<script src="chapters/ch4/content.js"></script>
 </body>
 </html>

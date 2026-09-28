@@ -1,54 +1,46 @@
 # ECON 281 Study Lab
 
-An interactive study tool for ECON 281 (Intermediate Microeconomics), organized by chapter.
-Each chapter has lessons with draggable graphs, practice problems with worked answers, a quiz, flashcards and a formula sheet.
+An interactive study site for ECON 281 (Intermediate Microeconomics, MacEwan University, Fall 2026), organized by chapter.
 
-## Using it
+- **Dashboard**: countdown to the next quiz or midterm, the next week of classes, grade weights and your running grade.
+- **Calendar**: every lecture, quiz, midterm and no-class day from the course outline. Click a day for details, and add your own study sessions.
+- **Course & grades**: instructor info, assessment table, grading scale and key policies. There's also a grade tracker that works out what you need on the final, and a place to enter your personal final exam date.
+- **Chapters 3 and 4**: lessons with interactive graphs, practice problems with worked answers, a quiz, flashcards and a formula sheet.
 
-No build step. Open `index.html` in a browser, or turn on GitHub Pages for this repo (Settings → Pages → deploy from the default branch) to get a shareable link.
+Dark (blue and black) is the default theme. Switch to light mode at the bottom of the sidebar.
 
-Quiz scores, flashcard progress and the theme choice are saved in the browser on each device.
+## Your data stays on your computer
 
-## What's in Chapter 3 · Consumer Behavior
+Everything a student does is saved in their own browser's `localStorage`: quiz scores, flashcards, practice checkmarks, grades, the final exam date, calendar events and the theme. Nothing is uploaded, and there is no server or account. If two people use the same link, each sees only their own progress. Clearing browser data (or **Course & grades → Clear all my saved data**) removes it.
 
-| Section | Interactive graphs |
-|---|---|
-| 3.1 Consumer Preferences | Which bundles beat B · indifference map (and why curves can't cross) · MRS as the slope · Joe vs Mary vs first consumer · substitutes and complements · diminishing marginal utility |
-| 3.2 Budget Constraints | Budget line lab (prices, income, lecture scenarios) · Worksheet 3 prediction table |
-| 3.3 Consumer Choice | Optimal bundle lab (Joe, Mary, Mike, Jane, Kory, Exercise 2) · corner solutions with perfect substitutes |
-| 3.4 Extensions | Equal bangs for the buck with three goods |
+## Running it
 
-Practice covers Worksheets 3 and 4, Exercises 1–5 and the Jennifer cookie problem.
+There's no build step.
 
-## Adding exams and the course outline
+- **Locally:** open `index.html` in a browser.
+- **On GitHub Pages:** in the repo go to *Settings → Pages*, choose *Deploy from a branch*, pick the branch and `/ (root)`, and save. Share the `https://<user>.github.io/ECON-281/` link.
 
-Edit `data/course.js`:
+## Updating course info
 
-```js
-exams: [
-  { name: 'Midterm 1', date: '2026-10-21', time: '10:00–11:20', location: 'Room 101', covers: ['ch3'] },
-],
-outline: [
-  { week: 1, topic: 'Ch 3 · Consumer preferences' },
-],
-plannedChapters: [{ number: 4, title: 'Demand' }],
-```
+Everything shared by all students is in `data/course.js`: the instructor, the lecture schedule, assessments (dates, weights, which chapters they cover), the chapter list, the grading scale and policies. Edit it and the dashboard, calendar and course page all update.
 
-The home page shows a countdown for each exam.
+## Adding a chapter (e.g. Chapter 6)
 
-## Adding a chapter
-
-1. Create `chapters/chN/content.js` that calls `Study.registerChapter({ id: 'chN', number: N, title, blurb, intro, sections, practice, quiz, cards, sheet })`. Use `chapters/ch3/content.js` as the template.
-2. Put any new interactive graphs in `chapters/chN/widgets.js` with `Study.registerWidget('name', (el, options) => { ... })`, and place them in lesson HTML with `<div data-widget="name" data-preset="..."></div>`. Ch 3 widgets can be reused in later chapters.
-3. Add both files as `<script>` tags at the bottom of `index.html`, widgets first.
+1. The chapter is already listed in `chapterPlan` in `data/course.js` (it shows as "coming soon").
+2. Create `chapters/ch6/content.js` that calls `Study.registerChapter({ id: 'ch6', number: 6, title, blurb, intro, sections, practice, quiz, cards, sheet })`. Copy `chapters/ch4/content.js` as a template.
+3. Put new interactive graphs in `chapters/ch6/widgets.js` with `Study.registerWidget('name', (el, options) => { ... })`, and place them in lesson HTML with `<div data-widget="name" data-preset="..."></div>`. Widgets from earlier chapters can be reused.
+4. Add the new files as `<script>` tags at the bottom of `index.html`, widgets before content.
 
 ## Files
 
 ```
-index.html              page shell
-assets/styles.css       design tokens (light + dark) and layout
-assets/graph.js         small SVG plotting helper (axes, curves, draggable points, animation)
-assets/app.js           router, home page, lessons/practice/quiz/flashcards/formula views
-data/course.js          exams, outline, planned chapters
-chapters/ch3/           Chapter 3 content and interactive graphs
+index.html               page shell
+assets/styles.css        theme tokens (dark default, light option) and layout
+assets/graph.js          SVG plotting helper: axes, curves, draggable points, animation
+assets/ui.js             shared controls for interactive graphs (sliders, chips, readouts)
+assets/app.js            router, dashboard, calendar, course page, chapter views, local storage
+data/course.js           course outline data
+chapters/ch3/            Chapter 3 · Consumer Choice
+chapters/ch4/econ.js     preference engine: traces indifference curves from the MRS (normal, inferior, Giffen)
+chapters/ch4/            Chapter 4 · Individual and Market Demand
 ```

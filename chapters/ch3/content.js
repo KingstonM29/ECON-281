@@ -305,7 +305,7 @@
   ];
 
   Study.registerChapter({
-    id: 'ch3', number: 3, title: 'Consumer Behavior',
+    id: 'ch3', number: 3, title: 'Consumer Choice',
     blurb: 'Preferences, budget constraints, and how a consumer picks the bundle that maximizes utility.',
     intro: 'How does a consumer split a budget between goods? Preferences (indifference curves), prices and income (the budget line) together pick the best bundle.',
     sections: [
