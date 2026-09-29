@@ -20,7 +20,7 @@ Everything a student does is saved in their own browser's `localStorage`: quiz s
 There's no build step.
 
 - **Locally:** open `index.html` in a browser.
-- **On GitHub Pages:** in the repo go to *Settings → Pages*, choose *Deploy from a branch*, pick the branch and `/ (root)`, and save. Share the `https://<user>.github.io/ECON-281/` link.
+- **On GitHub Pages:** in the repo go to *Settings → Pages*, choose *Deploy from a branch*, pick `main` and `/ (root)`, and save. Share the `https://kingstonm29.github.io/ECON-281/` link.
 
 ## Updating course info
 
