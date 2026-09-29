@@ -1,5 +1,7 @@
 # ECON 281 Study Lab
 
+Made by [KingstonM29](https://github.com/KingstonM29).
+
 An interactive study site for ECON 281 (Intermediate Microeconomics, MacEwan University, Fall 2026), organized by chapter.
 
 - **Dashboard**: countdown to the next quiz or midterm, the next week of classes, grade weights and your running grade.

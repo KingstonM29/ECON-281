@@ -607,3 +607,5 @@ table.scale td, table.scale th { padding: 6px 10px; }
 
 .curve.u0 { stroke: var(--ic); opacity: 0.5; stroke-dasharray: 2 0; }
 table.compact th, table.compact td { padding: 6px 7px; font-size: 14px; }
+.credit { margin-top: 14px; font-size: 13px; color: var(--ink-2); }
+.credit a { color: var(--accent-2); text-decoration: none; }
