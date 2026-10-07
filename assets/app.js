@@ -3,6 +3,7 @@
    All personal data lives in this browser's localStorage under "econ281:" keys. Nothing is sent anywhere. */
 window.Study = (function () {
   const chapters = [];
+  const preps = [];
   const widgets = {};
   const course = { code: 'ECON 281', title: '', term: '', assessments: [], schedule: [], chapterPlan: [], gradeScale: [], policies: [] };
 
@@ -20,6 +21,7 @@ window.Study = (function () {
 
   function registerChapter(c) { chapters.push(c); chapters.sort((a, b) => a.number - b.number); }
   function registerWidget(name, fn) { widgets[name] = fn; }
+  function registerPrep(p) { preps.push(p); }
   function setCourse(c) { Object.assign(course, c); }
 
   function mountWidgets(root) {
@@ -73,6 +75,8 @@ window.Study = (function () {
   function parse() {
     const h = decodeURIComponent((location.hash || '').slice(1));
     if (h === 'calendar' || h === 'course') return { view: h };
+    const pm = /^prep-(\w+)$/.exec(h);
+    if (pm && preps.find((x) => x.id === pm[1])) return { view: 'prep', id: pm[1] };
     const m = /^(ch\d+)(?:-(practice|quiz|cards|sheet))?$/.exec(h);
     if (m && chapters.find((c) => c.id === m[1])) return { view: 'chapter', ch: m[1], tab: m[2] || '' };
     return { view: 'home' };
@@ -84,6 +88,7 @@ window.Study = (function () {
     main.innerHTML = '';
     ({ home: renderHome, calendar: renderCalendar, course: renderCourse })[r.view]?.(main);
     if (r.view === 'chapter') renderChapter(main, chapters.find((c) => c.id === r.ch), r.tab);
+    if (r.view === 'prep') renderPrep(main, preps.find((x) => x.id === r.id));
     document.body.classList.remove('nav-open');
     window.scrollTo(0, 0);
   }
@@ -94,7 +99,7 @@ window.Study = (function () {
     let html = `<div class="nav-group">
       <a class="nav-link" href="#home"${cur(r.view === 'home')}><span class="ico">◧</span>Dashboard</a>
       <a class="nav-link" href="#calendar"${cur(r.view === 'calendar')}><span class="ico">▦</span>Calendar</a>
-      <a class="nav-link" href="#course"${cur(r.view === 'course')}><span class="ico">≡</span>Course &amp; grades</a></div>`;
+      <a class="nav-link" href="#course"${cur(r.view === 'course')}><span class="ico">≡</span>Course &amp; grades</a>${preps.map((x) => { const a = course.assessments.find((y) => y.id === x.assessment); const n = a && a.date ? daysFrom(a.date) : null; return `<a class="nav-link prep-link" href="#prep-${x.id}"${cur(r.view === 'prep' && r.id === x.id)}><span class="ico">✎</span>${esc(x.title)}${n != null && n >= 0 ? `<span class="nav-badge">${n === 0 ? 'Today' : n + 'd'}</span>` : ''}</a>`; }).join('')}</div>`;
     html += `<div class="nav-group"><div class="nav-group-title">Chapters</div>`;
     for (const p of course.chapterPlan) {
       const c = chapters.find((x) => x.id === p.id);
@@ -145,10 +150,10 @@ window.Study = (function () {
     const finalSet = !!store.get('finalDate', null);
 
     const nextHtml = next ? `
-      <div class="countdown"><span class="n">${Math.max(0, daysFrom(next.date))}</span><span class="u">${daysFrom(next.date) === 1 ? 'day' : 'days'}</span></div>
+      <div class="countdown">${daysFrom(next.date) === 0 ? '<span class="n today-n">Today</span><span class="u">' + esc(next.sub.split(' · ')[0]) + '</span>' : `<span class="n">${daysFrom(next.date)}</span><span class="u">${daysFrom(next.date) === 1 ? 'day' : 'days'}</span>`}</div>
       <div class="next-body"><p class="eyebrow">Next assessment</p><h2>${esc(next.title)}</h2>
         <p>${fmtDay(next.date, { weekday: 'long', month: 'long', day: 'numeric' })} · ${esc(next.sub)}</p>
-        <div class="btn-row">${(next.covers || []).filter(hasNotes).map((c) => `<a class="btn primary" href="#${c}">Study ${chName(c).split(' · ')[0]}</a><a class="btn" href="#${c}-quiz">Ch ${plan(c).number} quiz</a>`).join('')}<a class="btn ghost" href="#calendar">Open calendar</a></div></div>`
+        <div class="btn-row">${(next.covers || []).filter(hasNotes).map((c) => `<a class="btn primary" href="#${c}">Study ${chName(c).split(' · ')[0]}</a><a class="btn" href="#${c}-quiz">Ch ${plan(c).number} quiz</a>`).join('')}<a class="btn ghost" href="#calendar">Open calendar</a></div>${preps.filter((x) => x.assessment === next.id).map((x) => `<a class="btn primary big-cta" href="#prep-${x.id}">✎ Practice test for ${esc(next.title)} (${x.questions.length} questions, ${x.minutes} min)</a>`).join('')}</div>`
       : `<div class="next-body"><p class="eyebrow">Next assessment</p><h2>Nothing scheduled</h2><p>${finalSet ? 'All term assessments are done.' : 'Add your final exam date on the Course page to count down to it.'}</p></div>`;
 
     const upHtml = upcoming.map((e) => {
@@ -489,6 +494,85 @@ window.Study = (function () {
     view.innerHTML = `<p class="lede">Everything in Chapter ${ch.number} you should be able to write from memory.</p><div class="sheet-grid">${ch.sheet.map((s) => `<div class="sheet-card"><h3>${s.h}</h3><div class="f">${s.f}</div>${s.p ? `<p>${s.p}</p>` : ''}</div>`).join('')}</div>`;
   }
 
+
+  /* ---------- Exam prep: cram sheet + timed practice test ---------- */
+  function renderPrep(main, P) {
+    const a = course.assessments.find((x) => x.id === P.assessment) || {};
+    const key = 'prep:' + P.id;
+    const n = a.date ? daysFrom(a.date) : null;
+    const best = store.get(key, null);
+    main.innerHTML = `<div class="page"><header class="ch-head"><p class="eyebrow">${esc(a.name || '')}${a.date ? ' · ' + fmtDay(a.date, { weekday: 'long', month: 'long', day: 'numeric' }) + (a.time ? ', ' + a.time : '') : ''}</p><h1>${esc(P.title)}</h1>
+      <p class="ch-meta">${n != null ? `<span class="pill p-midterm">${n > 0 ? 'In ' + n + ' days' : n === 0 ? 'Today' : 'Done'}</span>` : ''}<span>${esc(a.duration || '')} · ${esc(a.format || '')} · multiple choice · ${a.weight || ''}%</span>${(a.covers || []).map((c) => hasNotes(c) ? `<a href="#${c}-sheet">${esc(chName(c).split(' · ')[0])} formula sheet</a>` : '').join('')}</p></header>
+      <section class="panel"><h2>Plan</h2><ol class="plan">${P.plan.map(([t, d]) => `<li><b>${esc(t)}</b><span>${d}</span></li>`).join('')}</ol>
+        <div class="btn-row"><a class="btn primary" href="#prep-test" data-go="test">Start the practice test →</a></div></section>
+      <div class="info-grid"><section class="panel"><h2>Must-know formulas</h2><dl class="kv formula-kv">${P.formulas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></section>
+        <section class="panel"><h2>Traps that cost marks</h2><ol class="rules">${P.traps.map((t) => `<li>${t}</li>`).join('')}</ol></section></div>
+      <section class="panel" id="prep-test"><div class="panel-head"><h2>Practice test</h2><span class="muted small">${P.questions.length} questions · best on this device: ${best == null ? '–' : best + '/' + P.questions.length}</span></div><div id="test"></div></section>
+      <p class="local-note">These questions are original practice written in the style of the course worksheets and exercises. They are not past ${esc(course.code)} exams.</p></div>`;
+    main.querySelector('[data-go]').addEventListener('click', (e) => { e.preventDefault(); main.querySelector('#prep-test').scrollIntoView(); });
+    const box = main.querySelector('#test');
+    let answers, timerId, endAt;
+    function intro() {
+      clearInterval(timerId);
+      box.innerHTML = `<p class="muted">Answer every question, then submit to see your score and worked solutions. Like the real thing: no notes, ${P.minutes} minutes.</p>
+        <div class="btn-row"><button class="btn primary" id="t-timed">Start with ${P.minutes}-min timer</button><button class="btn" id="t-free">Start untimed</button>
+        <button class="btn" id="t-ch3">Only Ch 3 questions</button><button class="btn" id="t-ch4">Only Ch 4 questions</button></div>`;
+      box.querySelector('#t-timed').onclick = () => start(P.questions.map((_, i) => i), true);
+      box.querySelector('#t-free').onclick = () => start(P.questions.map((_, i) => i), false);
+      box.querySelector('#t-ch3').onclick = () => start(P.questions.map((q, i) => (q.ch === 3 ? i : -1)).filter((i) => i >= 0), false);
+      box.querySelector('#t-ch4').onclick = () => start(P.questions.map((q, i) => (q.ch === 4 ? i : -1)).filter((i) => i >= 0), false);
+    }
+    function start(order, timed) {
+      answers = {};
+      box.innerHTML = `<div class="test-bar"><span id="t-progress">0/${order.length} answered</span>${timed ? '<span class="timer" id="t-timer"></span>' : ''}</div>
+        <ol class="test-list">${order.map((qi, k) => { const q = P.questions[qi]; return `<li class="tq" id="tq-${qi}"><div class="tq-h"><span class="tq-n">${k + 1}</span><span class="pill p-lecture">Ch ${q.ch}</span></div><p class="tq-q">${q.q}</p>
+          <div class="opts">${q.options.map((o, j) => `<label class="opt"><input type="radio" name="q${qi}" value="${j}"><span class="k">${'ABCD'[j]}</span><span>${o}</span></label>`).join('')}</div><div class="tq-why"></div></li>`; }).join('')}</ol>
+        <div class="btn-row"><button class="btn primary" id="t-submit">Submit and see my score</button><button class="btn" id="t-quit">Start over</button></div>`;
+      box.querySelectorAll('input[type=radio]').forEach((r) => r.addEventListener('change', () => {
+        answers[r.name.slice(1)] = +r.value;
+        box.querySelector('#t-progress').textContent = `${Object.keys(answers).length}/${order.length} answered`;
+      }));
+      box.querySelector('#t-submit').onclick = () => finish(order);
+      box.querySelector('#t-quit').onclick = intro;
+      if (timed) {
+        endAt = Date.now() + P.minutes * 60000;
+        const tick = () => {
+          const left = Math.max(0, endAt - Date.now()), el = box.querySelector('#t-timer');
+          if (!el) { clearInterval(timerId); return; }
+          el.textContent = `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')} left`;
+          el.classList.toggle('low', left < 5 * 60000);
+          if (left === 0) finish(order);
+        };
+        tick(); timerId = setInterval(tick, 1000);
+      }
+      box.scrollIntoView();
+    }
+    function finish(order) {
+      clearInterval(timerId);
+      let score = 0;
+      const byCh = {};
+      order.forEach((qi) => {
+        const q = P.questions[qi], li = box.querySelector('#tq-' + qi), pick = answers[qi];
+        const ok = pick === q.answer; if (ok) score++;
+        byCh[q.ch] = byCh[q.ch] || [0, 0]; byCh[q.ch][1]++; if (ok) byCh[q.ch][0]++;
+        li.classList.add(ok ? 'ok' : 'bad');
+        li.querySelectorAll('.opt').forEach((o, j) => { o.querySelector('input').disabled = true; if (j === q.answer) o.classList.add('right'); else if (j === pick) o.classList.add('wrong'); });
+        li.querySelector('.tq-why').innerHTML = `<div class="explain"><b>${ok ? 'Correct.' : pick == null ? 'Not answered.' : 'Not quite.'}</b> ${q.why}</div>`;
+      });
+      if (order.length === P.questions.length) { const b = store.get(key, null); if (b == null || score > b) store.set(key, score); }
+      const pct = Math.round((score / order.length) * 100);
+      const res = document.createElement('div');
+      res.className = 'test-result';
+      res.innerHTML = `<div class="score-big">${score}/${order.length}</div><div><b>${pct}% · ${letterFor(pct)}</b><p class="muted">${Object.entries(byCh).map(([c, [r, t]]) => `Ch ${c}: ${r}/${t}`).join(' · ')}. Missed questions are marked in red with worked solutions.</p>
+        <div class="btn-row"><button class="btn primary" id="t-again">Try again</button>${Object.entries(byCh).map(([c, [r, t]]) => (r < t && hasNotes('ch' + c) ? `<a class="btn" href="#ch${c}-sheet">Review Ch ${c} formula sheet</a>` : '')).join('')}</div></div>`;
+      box.prepend(res);
+      box.querySelector('#t-submit').remove();
+      res.querySelector('#t-again').onclick = intro;
+      res.scrollIntoView();
+    }
+    intro();
+  }
+
   /* ---------- Theme & boot ---------- */
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
@@ -503,6 +587,6 @@ window.Study = (function () {
     render();
   }
 
-  return { registerChapter, registerWidget, setCourse, store, mountWidgets, boot, esc };
+  return { registerChapter, registerPrep, registerWidget, setCourse, store, mountWidgets, boot, esc };
 })();
 document.addEventListener('DOMContentLoaded', () => window.Study.boot());
