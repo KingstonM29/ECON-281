@@ -640,3 +640,41 @@ label.opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-o
 label.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
 label.opt.right { border-color: var(--opt); background: var(--opt-soft); }
 .countdown .today-n { font-size: 44px; }
+
+/* Formula cards with worked examples */
+.fx-block { display: grid; gap: 12px; margin-top: 8px; scroll-margin-top: 80px; }
+.fx-anchor { scroll-margin-top: 80px; display: grid; gap: 12px; }
+.fx-title { font-size: 18px; color: var(--accent-2); }
+.fx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.fx { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.fx h4 { font-size: 17px; }
+.fx-eq { font-size: 20px; font-weight: 600; color: var(--ink); padding: 12px 14px; display: grid; gap: 4px; border-radius: 8px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); line-height: 1.6; overflow-x: auto; }
+.fx-words { font-size: 15px; color: var(--ink-2); }
+.fx-sym { margin: 0; display: grid; gap: 2px; font-size: 14px; }
+.fx-sym div { display: grid; grid-template-columns: minmax(64px, auto) 1fr; gap: 10px; }
+.fx-sym dt { font-weight: 700; font-family: var(--font-mono); font-size: 13px; }
+.fx-sym dd { margin: 0; color: var(--ink-2); }
+.fx-ex { display: grid; gap: 6px; padding: 12px 14px; border-radius: 8px; background: var(--surface-2); border-left: 3px solid var(--opt); }
+.fx-ex .tag { font: 600 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--opt); }
+.fx-given { font-size: 15px; }
+.fx-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 3px; font-size: 15px; }
+.fx-ans { font-size: 15px; }
+.fx-trap { font-size: 14px; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 8px; }
+.fx-trap b { color: var(--bad); }
+
+/* Formula drill */
+.drill-card { display: grid; gap: 12px; padding: 16px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.drill-q { font-size: 17px; font-weight: 600; line-height: 1.5; }
+.drill-in { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.drill-in input { width: 160px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font: 600 16px var(--font-mono); }
+.drill-in span { font: 600 15px var(--font-mono); color: var(--ink-2); }
+.drill-formula { margin: 8px 0 4px; font-weight: 600; }
+.drill .fx-steps { margin-top: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.fx-lbl { font: 600 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); }
+.fx-eq .frac { font-size: 0.95em; }
+.fx-alt { display: grid; gap: 4px; padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--accent); background: var(--surface-2); }
+.fx-alt .tag { font: 600 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); }
+.fx-alt ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 15px; }
+.src.wp { background: var(--accent-soft); color: var(--accent-2); }

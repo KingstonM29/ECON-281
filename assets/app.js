@@ -17,7 +17,7 @@ window.Study = (function () {
     },
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const TABS = [['', 'Lessons'], ['practice', 'Practice'], ['quiz', 'Quiz'], ['cards', 'Flashcards'], ['sheet', 'Formula sheet']];
+  const TABS = [['', 'Lessons'], ['practice', 'Practice'], ['quiz', 'Quiz'], ['cards', 'Flashcards'], ['sheet', 'Formulas & examples']];
 
   function registerChapter(c) { chapters.push(c); chapters.sort((a, b) => a.number - b.number); }
   function registerWidget(name, fn) { widgets[name] = fn; }
@@ -358,11 +358,20 @@ window.Study = (function () {
     ({ '': lessons, practice, quiz, cards, sheet })[tab](view, ch);
   }
 
+  const fxFor = (ch, sec) => (window.FORMULAS?.[ch.id] || []).filter((f) => !sec || f.sec === sec);
+  function fxCard(f) {
+    return `<article class="fx"><h4>${f.name}</h4><div class="fx-eq"><span class="fx-lbl">Formula</span><span class="fx-f">${f.formula}</span></div>${f.words ? `<p class="fx-words">${f.words}</p>` : ''}
+      ${f.symbols ? `<dl class="fx-sym">${f.symbols.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>` : ''}
+      ${f.example ? `<div class="fx-ex"><span class="tag">Worked example</span><p class="fx-given">${f.example.given}</p><ol class="fx-steps">${f.example.steps.map((st) => `<li>${st}</li>`).join('')}</ol><p class="fx-ans">${f.example.answer}</p></div>` : ''}
+      ${f.alt ? `<div class="fx-alt"><span class="tag">Other ways to get it</span><ul>${f.alt.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : ''}
+      ${f.mistake ? `<p class="fx-trap"><b>Watch out:</b> ${f.mistake}</p>` : ''}</article>`;
+  }
   function lessons(view, ch) {
     const toc = ch.sections.map((s) => `<button class="chip" data-jump="${ch.id}-${s.id}">${esc(s.num)} ${esc(s.title)}</button>`).join('');
     view.innerHTML = `<p class="lede">${ch.intro}</p><div class="toc">${toc}</div>` +
       ch.sections.map((s) => `<section class="lesson" id="${ch.id}-${s.id}"><h2><span class="sec">${esc(s.num)}</span>${esc(s.title)}</h2>
         <div class="prose">${s.html}</div>
+        ${fxFor(ch, s.id).length ? `<div class="fx-block"><h3 class="fx-title">Formulas in ${esc(s.num)}, with worked examples</h3><div class="fx-grid">${fxFor(ch, s.id).map(fxCard).join('')}</div></div>` : ''}
         ${s.takeaways ? `<div class="takeaways"><h4>Takeaways</h4><ul>${s.takeaways.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}</section>`).join('') +
       `<div class="btn-row"><a class="btn primary" href="#${ch.id}-practice">Next: practice problems →</a></div>`;
     view.querySelectorAll('[data-jump]').forEach((b) => b.addEventListener('click', () => document.getElementById(b.dataset.jump).scrollIntoView()));
@@ -373,6 +382,7 @@ window.Study = (function () {
     const key = 'done:' + ch.id;
     const done = new Set(store.get(key, []));
     view.innerHTML = `<p class="lede">Questions from the worksheets and the Chapter ${ch.number} exercises. Try each part first, then open the answer. Tick a problem off when you've done it; the tick is saved on this device.</p>
+      ${(window.FORMULA_DRILLS || {})[ch.id] ? `<div data-widget="formulaDrill" data-ch="${ch.id}"></div>` : ''}
       <div class="toc">${ch.practice.map((p, i) => `<button class="chip${done.has(i) ? ' done' : ''}" data-jump="${ch.id}-p${i}">${done.has(i) ? '✓ ' : ''}${esc(p.short || p.title)}</button>`).join('')}</div>` +
       ch.practice.map((p, i) => `<article class="problem" id="${ch.id}-p${i}"><div class="problem-head"><span class="src">${esc(p.source)}</span><h3>${esc(p.title)}</h3>
         <label class="check done-check"><input type="checkbox" data-done="${i}" ${done.has(i) ? 'checked' : ''}> Done</label></div>
@@ -491,7 +501,17 @@ window.Study = (function () {
   }
 
   function sheet(view, ch) {
-    view.innerHTML = `<p class="lede">Everything in Chapter ${ch.number} you should be able to write from memory.</p><div class="sheet-grid">${ch.sheet.map((s) => `<div class="sheet-card"><h3>${s.h}</h3><div class="f">${s.f}</div>${s.p ? `<p>${s.p}</p>` : ''}</div>`).join('')}</div>`;
+    const quick = `<div class="sheet-grid">${ch.sheet.map((s) => `<div class="sheet-card"><h3>${s.h}</h3><div class="f">${s.f}</div>${s.p ? `<p>${s.p}</p>` : ''}</div>`).join('')}</div>`;
+    const fx = fxFor(ch);
+    if (!fx.length) { view.innerHTML = `<p class="lede">Everything in Chapter ${ch.number} you should be able to write from memory.</p>${quick}`; return; }
+    const bySec = ch.sections.map((s) => ({ s, items: fx.filter((f) => f.sec === s.id) })).filter((g) => g.items.length);
+    view.innerHTML = `<p class="lede">Every Chapter ${ch.number} formula, what each symbol means, and a worked example with every step. Then drill them with fresh numbers.</p>
+      <div class="toc">${bySec.map((g) => `<button class="chip" data-jump="fx-${g.s.id}">${esc(g.s.num)} ${esc(g.s.title)}</button>`).join('')}<button class="chip" data-jump="fx-drill">Formula drill</button><button class="chip" data-jump="fx-quick">One-page summary</button></div>
+      ${bySec.map((g) => `<section class="fx-block" id="fx-${g.s.id}"><h3 class="fx-title">${esc(g.s.num)} ${esc(g.s.title)}</h3><div class="fx-grid">${g.items.map(fxCard).join('')}</div></section>`).join('')}
+      <section id="fx-drill" class="fx-anchor"><div data-widget="formulaDrill" data-ch="${ch.id}"></div></section>
+      <section id="fx-quick" class="fx-anchor"><h3 class="fx-title">One-page summary</h3>${quick}</section>`;
+    view.querySelectorAll('[data-jump]').forEach((b) => b.addEventListener('click', () => document.getElementById(b.dataset.jump).scrollIntoView()));
+    mountWidgets(view);
   }
 
 
@@ -578,6 +598,7 @@ window.Study = (function () {
     document.querySelectorAll('[data-theme-set]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.themeSet === t)));
   }
   function boot() {
+    chapters.forEach((c) => { const wp = window.WORD_PROBLEMS?.[c.id]; if (wp && !c._wp) { c.practice = c.practice.concat(wp); c._wp = true; } });
     applyTheme(store.get('theme', 'dark') === 'light' ? 'light' : 'dark');
     document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => { store.set('theme', b.dataset.themeSet); applyTheme(b.dataset.themeSet); }));
     document.getElementById('menu').addEventListener('click', () => document.body.classList.toggle('nav-open'));
