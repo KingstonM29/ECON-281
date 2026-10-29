@@ -7,7 +7,8 @@ An interactive study site for ECON 281 (Intermediate Microeconomics, MacEwan Uni
 - **Dashboard**: countdown to the next quiz or midterm, the next week of classes, grade weights and your running grade.
 - **Calendar**: every lecture, quiz, midterm and no-class day from the course outline. Click a day for details, and add your own study sessions.
 - **Course & grades**: instructor info, assessment table, grading scale and key policies. There's also a grade tracker that works out what you need on the final, and a place to enter your personal final exam date.
-- **Chapters 3 and 4**: lessons with interactive graphs, practice problems with worked answers, a quiz, flashcards and a formula sheet.
+- **Chapters 3, 4, 6, 7 and 8**: lessons with interactive graphs, practice problems with worked answers, a quiz, flashcards and a formula sheet.
+- **Exam prep**: timed practice tests with worked solutions for Midterm 1 (Ch 3–4), Quiz 2 (Ch 6–7) and Midterm 2 (Ch 6–8).
 
 Dark (blue and black) is the default theme. Switch to light mode at the bottom of the sidebar.
 

@@ -99,7 +99,7 @@ window.Study = (function () {
     let html = `<div class="nav-group">
       <a class="nav-link" href="#home"${cur(r.view === 'home')}><span class="ico">◧</span>Dashboard</a>
       <a class="nav-link" href="#calendar"${cur(r.view === 'calendar')}><span class="ico">▦</span>Calendar</a>
-      <a class="nav-link" href="#course"${cur(r.view === 'course')}><span class="ico">≡</span>Course &amp; grades</a>${preps.map((x) => { const a = course.assessments.find((y) => y.id === x.assessment); const n = a && a.date ? daysFrom(a.date) : null; return `<a class="nav-link prep-link" href="#prep-${x.id}"${cur(r.view === 'prep' && r.id === x.id)}><span class="ico">✎</span>${esc(x.title)}${n != null && n >= 0 ? `<span class="nav-badge">${n === 0 ? 'Today' : n + 'd'}</span>` : ''}</a>`; }).join('')}</div>`;
+      <a class="nav-link" href="#course"${cur(r.view === 'course')}><span class="ico">≡</span>Course &amp; grades</a>${preps.map((x) => { const a = course.assessments.find((y) => y.id === x.assessment); const n = a && a.date ? daysFrom(a.date) : null; if (n != null && n < 0 && !(r.view === 'prep' && r.id === x.id)) return ''; return `<a class="nav-link prep-link" href="#prep-${x.id}"${cur(r.view === 'prep' && r.id === x.id)}><span class="ico">✎</span>${esc(x.title)}${n != null && n >= 0 ? `<span class="nav-badge">${n === 0 ? 'Today' : n + 'd'}</span>` : ''}</a>`; }).join('')}</div>`;
     html += `<div class="nav-group"><div class="nav-group-title">Chapters</div>`;
     for (const p of course.chapterPlan) {
       const c = chapters.find((x) => x.id === p.id);
@@ -516,11 +516,10 @@ window.Study = (function () {
       clearInterval(timerId);
       box.innerHTML = `<p class="muted">Answer every question, then submit to see your score and worked solutions. Like the real thing: no notes, ${P.minutes} minutes.</p>
         <div class="btn-row"><button class="btn primary" id="t-timed">Start with ${P.minutes}-min timer</button><button class="btn" id="t-free">Start untimed</button>
-        <button class="btn" id="t-ch3">Only Ch 3 questions</button><button class="btn" id="t-ch4">Only Ch 4 questions</button></div>`;
+        ${[...new Set(P.questions.map((q) => q.ch))].map((c) => `<button class="btn" data-only="${c}">Only Ch ${c} questions</button>`).join('')}</div>`;
       box.querySelector('#t-timed').onclick = () => start(P.questions.map((_, i) => i), true);
       box.querySelector('#t-free').onclick = () => start(P.questions.map((_, i) => i), false);
-      box.querySelector('#t-ch3').onclick = () => start(P.questions.map((q, i) => (q.ch === 3 ? i : -1)).filter((i) => i >= 0), false);
-      box.querySelector('#t-ch4').onclick = () => start(P.questions.map((q, i) => (q.ch === 4 ? i : -1)).filter((i) => i >= 0), false);
+      box.querySelectorAll('[data-only]').forEach((btn) => { btn.onclick = () => start(P.questions.map((q, i) => (q.ch === +btn.dataset.only ? i : -1)).filter((i) => i >= 0), false); });
     }
     function start(order, timed) {
       answers = {};
